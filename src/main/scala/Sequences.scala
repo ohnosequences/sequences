@@ -44,11 +44,18 @@ case object sequences {
   (seqType: ST)(implicit seq: S): SequenceTypeOps[ST,S] =
     SequenceTypeOps(seqType)
 
-  case class SequenceTypeOps[ST <: AnySequenceType, S <: AnySequence { type SequenceType = ST }](val seqType: ST) extends AnyVal {
+  case class SequenceTypeOps[
+    ST <: AnySequenceType,
+    S <: AnySequence { type SequenceType = ST }
+  ]
+  (val seqType: ST) extends AnyVal {
 
-    def as(raw: S#Raw)(implicit seq: S): ValueOf[S] = (seq:S) := raw
+    final def as(raw: S#Raw)(implicit seq: S): ValueOf[S] = (seq:S) := raw
+
+    // TODO apply's based on particular implementations, that can actually check stuff
   }
 
+  // This is an implementation of a sequence
   trait AnySequence extends AnyType {
 
     type SequenceType <: AnySequenceType
@@ -59,7 +66,7 @@ case object sequences {
     def concatenate(l: Raw, r: Raw): Raw
   }
 
-  object AnySequence {
+  case object AnySequence {
 
     type is[S <: AnySequence] = S with AnySequence { type Raw = S#Raw; type SequenceType = S#SequenceType }
   }
@@ -67,33 +74,13 @@ case object sequences {
   abstract class Sequence[ST <: AnySequenceType](val sequenceType: ST) extends AnySequence { type SequenceType = ST }
   trait Using[X] extends AnySequence { type Raw = X }
 
-  // trait AnySequenceImpl {
-  //
-  //   type Sequence <: AnySequence
-  //   val sequence: Sequence
-  //
-  //   def empty: Sequence#Raw
-  //   def concatenate(left: Sequence#Raw, right: Sequence#Raw): Sequence#Raw
-  // }
-  //
-  // abstract class SequenceImpl[S <: AnySequence](val sequence: S) extends AnySequenceImpl {
-  //
-  //   type Sequence = S
-  // }
-
   // we can create a module abstraction which would fix the Ops value, if needed
-  implicit def sequenceSyntax[
-    S <: AnySequence
-  ]
-  (seq: ValueOf[S])(implicit s: S): SequenceSyntax[S] =
+  implicit def sequenceSyntax[S <: AnySequence](seq: ValueOf[S])(implicit s: S): SequenceSyntax[S] =
     SequenceSyntax(seq.value: S#Raw)
 
   case class SequenceSyntax[S <: AnySequence](val raw: S#Raw) extends AnyVal {
 
-    // def ++(right: ValueOf[S])(implicit impl: Impl): ValueOf[S] =
-    //   (impl.sequence) := impl.concatenate(raw, right.value)
-
-    def ++(right: ValueOf[S])(implicit s: AnySequence.is[S]): ValueOf[S] =
+    final def ++(right: ValueOf[S])(implicit s: AnySequence.is[S]): ValueOf[S] =
       (s: S) := s.concatenate((raw: S#Raw), (right.value: S#Raw))
   }
 }
