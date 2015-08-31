@@ -27,52 +27,73 @@ case object sequences {
   /*
     This is the type that will be denoted using a particular implementation. I'm not totally sure about the point of bounding `Raw` here, maybe it is a good idea to leave it as `Any`
   */
-  trait AnySequenceType extends AnyType {
+  trait AnySequenceType {
 
     type Alphabet <: AnyAlphabet
     val alphabet: Alphabet
   }
-
   abstract class SequenceType[A <: AnyAlphabet](val alphabet: A) extends AnySequenceType {
 
     type Alphabet = A
   }
 
-  // ops need the raw type to be uniform
-  // they should be provided only for Sequence:= R values
-  trait AnySequenceImpl extends AnyType {
+  implicit def sequenceTypeOps[
+    ST <: AnySequenceType,
+    S <: AnySequence { type SequenceType = ST }
+  ]
+  (seqType: ST)(implicit seq: S): SequenceTypeOps[ST,S] =
+    SequenceTypeOps(seqType)
+
+  case class SequenceTypeOps[ST <: AnySequenceType, S <: AnySequence { type SequenceType = ST }](val seqType: ST) extends AnyVal {
+
+    def as(raw: S#Raw)(implicit seq: S): ValueOf[S] = (seq:S) := raw
+  }
+
+  trait AnySequence extends AnyType {
 
     type SequenceType <: AnySequenceType
     val sequenceType: SequenceType
 
     // TODO actually useful? is that bound ever used?
-    type Raw <: SequenceType#Raw
-
-    def empty: SequenceType := Raw
-    def concatenate(left: SequenceType:= Raw, right: SequenceType:= Raw): SequenceType:= Raw
+    def empty: Raw
+    def concatenate(l: Raw, r: Raw): Raw
   }
 
-  abstract class SequenceImpl[ST <: AnySequenceType](val sequenceType: ST) extends AnySequenceImpl {
+  object AnySequence {
 
-    type SequenceType = ST
+    type is[S <: AnySequence] = S with AnySequence { type Raw = S#Raw; type SequenceType = S#SequenceType }
   }
+
+  abstract class Sequence[ST <: AnySequenceType](val sequenceType: ST) extends AnySequence { type SequenceType = ST }
+  trait Using[X] extends AnySequence { type Raw = X }
+
+  // trait AnySequenceImpl {
+  //
+  //   type Sequence <: AnySequence
+  //   val sequence: Sequence
+  //
+  //   def empty: Sequence#Raw
+  //   def concatenate(left: Sequence#Raw, right: Sequence#Raw): Sequence#Raw
+  // }
+  //
+  // abstract class SequenceImpl[S <: AnySequence](val sequence: S) extends AnySequenceImpl {
+  //
+  //   type Sequence = S
+  // }
 
   // we can create a module abstraction which would fix the Ops value, if needed
   implicit def sequenceSyntax[
-    S <: AnySequenceType,
-    R <: S#Raw,
-    Ops <: AnySequenceImpl { type SequenceType = S; type Raw = R }
+    S <: AnySequence
   ]
-  (seq: S := R)(implicit ops: Ops): SequenceSyntax[S,R,Ops] =
-    SequenceSyntax(seq.value)
+  (seq: ValueOf[S])(implicit s: S): SequenceSyntax[S] =
+    SequenceSyntax(seq.value: S#Raw)
 
-  case class SequenceSyntax[
-    S <: AnySequenceType,
-    R <: S#Raw,
-    Ops <: AnySequenceImpl { type SequenceType = S; type Raw = R }
-  ](val raw: R) extends AnyVal {
+  case class SequenceSyntax[S <: AnySequence](val raw: S#Raw) extends AnyVal {
 
-    def ++(right: S := R)(implicit ops: Ops): S := R =
-      ops.concatenate( (ops.sequenceType: S) := raw, right )
+    // def ++(right: ValueOf[S])(implicit impl: Impl): ValueOf[S] =
+    //   (impl.sequence) := impl.concatenate(raw, right.value)
+
+    def ++(right: ValueOf[S])(implicit s: AnySequence.is[S]): ValueOf[S] =
+      (s: S) := s.concatenate((raw: S#Raw), (right.value: S#Raw))
   }
 }
