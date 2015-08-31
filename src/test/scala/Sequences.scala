@@ -23,7 +23,7 @@ case object testImplementations {
     @inline final val empty = ""
     @inline final def concatenate(a: String, b: String) = a ++ b
 
-    @inline final def pickFrom(a: String) = a.filter(c => seqType.alphabet.symbols.contains(c))
+    @inline final def pickFrom(a: String) = a filter { c => seqType.alphabet.symbols.contains(c) }
   }
 
   // this can be abstracted as a module including an implementation etc
