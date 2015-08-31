@@ -50,7 +50,10 @@ case object sequences {
   ]
   (val seqType: ST) extends AnyVal {
 
+    // unsafe, does not check anything
     final def as(raw: S#Raw)(implicit seq: S): ValueOf[S] = (seq:S) := raw
+
+    final def pickFrom(raw: S#Raw)(implicit seq: AnySequence.is[S]): ValueOf[S] = (seq:S) := seq.pickFrom(raw: S#Raw)
 
     // TODO apply's based on particular implementations, that can actually check stuff
   }
@@ -64,6 +67,17 @@ case object sequences {
     // TODO actually useful? is that bound ever used?
     def empty: Raw
     def concatenate(l: Raw, r: Raw): Raw
+
+    // those valid symbols from ...
+    def pickFrom(l: Raw): Raw
+  }
+
+  trait AnyConvert {
+
+    type From <: AnySequence
+    type To <: AnySequence
+
+    def apply(from: From#Raw): To#Raw
   }
 
   case object AnySequence {

@@ -22,6 +22,8 @@ case object testImplementations {
 
     @inline final val empty = ""
     @inline final def concatenate(a: String, b: String) = a ++ b
+
+    @inline final def pickFrom(a: String) = a.filter(c => seqType.alphabet.symbols.contains(c))
   }
 
   // this can be abstracted as a module including an implementation etc
@@ -38,5 +40,16 @@ class StringSequenceTests extends FunSuite {
     val other = DNA as "ATCCCTTATCTCAGT"
 
     val buh = zz ++ other
+  }
+
+  test("can filter funny stuff") {
+
+    val notNucl = "NNBUUUUHHH"
+    val ok = "ATCTCACATACCCCTTTAATCT"
+    val funnyString = s"${notNucl}${ok}${notNucl}{ok}"
+
+    assert { (DNA pickFrom funnyString) === (DNA as ok) }
+    assert { (DNA pickFrom funnyString) === (DNA pickFrom ok) }
+
   }
 }

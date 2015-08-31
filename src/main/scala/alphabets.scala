@@ -10,6 +10,6 @@ case object alphabets {
   trait AnyAlphabet extends AnyType {
 
     // TODO can we do better?
-    def symbols: Set[Char]
+    val symbols: Set[Char]
   }
 }
