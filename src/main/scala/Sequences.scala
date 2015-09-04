@@ -64,7 +64,6 @@ case object sequences {
     type SequenceType <: AnySequenceType
     val sequenceType: SequenceType
 
-    // TODO actually useful? is that bound ever used?
     def empty: Raw
     def concatenate(l: Raw, r: Raw): Raw
 

@@ -1,6 +1,7 @@
 package ohnosequences.sequences
 
-import ohnosequences.cosas._, types._
+import ohnosequences.cosas._, types._, typeSets._, ops.typeSets.MapToList
+
 
 case object alphabets {
 
@@ -10,6 +11,32 @@ case object alphabets {
   trait AnyAlphabet extends AnyType {
 
     // TODO can we do better?
-    val symbols: Set[Char]
+    val symbolsChar: Set[Char]
   }
+
+  trait AnySymbol { val char: Char }
+  trait Symbol extends AnySymbol { lazy val char = toString.head }
+
+  case object symbolChar extends shapeless.Poly1 { implicit def symbolChar[S <: AnySymbol] = at[S]{ s => s.char } }
+
+  trait AnyFiniteAlphabet extends AnyAlphabet {
+
+    type Symbols <: AnyTypeSet.Of[AnySymbol]
+    val symbols: Symbols
+
+    implicit val mapSymbolChars: (symbolChar.type MapToList Symbols) { type O = Char }
+
+    lazy val symbolsChar: Set[Char] = (symbols mapToList symbolChar).toSet
+
+    lazy val label = toString
+  }
+
+  abstract class FiniteAlphabet[Ss <: AnyTypeSet.Of[AnySymbol]](val symbols: Ss)(
+    implicit val mapSymbolChars: (symbolChar.type MapToList Ss) { type O = Char }
+  )
+  extends AnyFiniteAlphabet {
+
+    type Symbols = Ss
+  }
+
 }
