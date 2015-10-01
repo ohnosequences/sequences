@@ -1,6 +1,6 @@
 package ohnosequences.sequences.tests
 
-import ohnosequences.cosas._, typeSets._
+import ohnosequences.cosas._, typeSets._, fns._
 import ohnosequences.sequences._, alphabets._
 
 case object exampleFiniteAlphabets {
@@ -16,9 +16,15 @@ case object exampleFiniteAlphabets {
     // RNA!
     case object U extends Symbol
 
-    case object DNA   extends FiniteAlphabet(A :~: T :~: C :~: G :~: ∅)
+    case object DNA   extends FiniteAlphabet(A :~: T :~: C :~: G :~: ∅)(MapToListOf.nonEmpty)
     case object RNA   extends FiniteAlphabet(U :~: ( DNA.symbols \ (T :~: ∅) ) )
     case object DNANs extends FiniteAlphabet(N :~: DNA.symbols)
+
+    import finiteSequences._
+
+    val z: FiniteSequenceOver[DNA.type]   = T::T::T::A::Empty[DNA.type]
+    val zz: FiniteSequenceOver[RNA.type]  = U::U::A::A::A::Empty[RNA.type]
+    // val zzz: FiniteSequenceOver[DNA.type] = U::U::U::A::T::Empty[DNA.type]
   }
 
 

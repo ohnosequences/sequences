@@ -10,5 +10,5 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.5" % Test
 
 libraryDependencies ++=
   Seq(
-    "ohnosequences" %% "cosas" % "0.7.0-SNAPSHOT"
+    "ohnosequences" %% "cosas" % "0.8.0-SNAPSHOT"
   )

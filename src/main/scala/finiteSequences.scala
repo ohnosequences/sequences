@@ -1,8 +1,43 @@
 package ohnosequences.sequences
 
 import sequences._, alphabets._
+import ohnosequences.cosas.typeSets._
 
 case object finiteSequences {
+
+  trait AnyFiniteSequence {
+
+    type Alphabet <: AnyFiniteAlphabet
+  }
+
+  trait FiniteSequenceOver[A <: AnyFiniteAlphabet] extends AnyFiniteSequence {
+
+    type Alphabet = A
+  }
+
+  def Empty[A0 <: AnyFiniteAlphabet]: EmptyFiniteSequence[A0] = new EmptyFiniteSequence[A0]
+  class EmptyFiniteSequence[Alph <: AnyFiniteAlphabet]
+  extends FiniteSequenceOver[Alph] {
+
+    def ::[H0](h: H0)(implicit
+      validSymbol: H0 ∈ Alph#Symbols
+    )
+    : ConsFiniteSequence[Alph,H0,EmptyFiniteSequence[Alph]] =
+      new ConsFiniteSequence(h,this)
+  }
+
+  case class ConsFiniteSequence[
+    Alph <: AnyFiniteAlphabet,
+    H, T <: FiniteSequenceOver[Alph]
+  ](val head: H, val tail: T)(implicit val validSymbol: H ∈ Alph#Symbols)
+  extends FiniteSequenceOver[Alph] {
+
+    def ::[H0](h: H0)(implicit
+      validSymbol: H0 ∈ Alph#Symbols
+    )
+    : ConsFiniteSequence[Alph,H0,ConsFiniteSequence[Alph,H,T]] =
+      new ConsFiniteSequence(h,this)
+  }
 
   trait AnyFiniteSequenceType extends AnySequenceType {
 
